@@ -1,9 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ask Tilli Prototype</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@600;700&display=swap">
 <style>
+/* Base reset for standalone hosting (GitHub Pages) */
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+
 /* Layout: sidebar = Today + classes, each class holds its own chats. Today is a landing page whose chat box
    files each message into the right class. Assessments open in a full focus screen. Flat tiles, few borders. */
 :root{
@@ -302,7 +312,8 @@ select{border:1px solid var(--line);border-radius:10px;padding:9px 10px;backgrou
   .side,.progress i,.f-bar i,.q,.cls-head .caret{transition:none}
 }
 </style>
-
+</head>
+<body>
 <div class="app">
   <aside class="side" id="side" aria-label="Today and classes">
     <div class="brand">
@@ -866,3 +877,6 @@ select{border:1px solid var(--line);border-radius:10px;padding:9px 10px;backgrou
   goToday();
 })();
 </script>
+
+</body>
+</html>
