@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ask Tilli Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@600;700&display=swap">
+<style>
+/* Base reset for standalone hosting (GitHub Pages) */
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+
+/* Layout: sidebar = Today + classes, each class holds its own chats. Today is a landing page whose chat box
+   files each message into the right class. Assessments open in a full focus screen. Flat tiles, few borders. */
+:root{
+  --yellow:#F5C518;
+  --on-yellow:#1A1A2E;
+  --coral:#E8446A;
+  --teal:#00A99B;
+  --teal-soft:#9EDDD6;
+  --teal-ink:#00756B;
+  --ink:#1A1A2E;
+  --muted:#636073;
+  --bg:#FFFFFF;
+  --soft:#F6F4EE;
+  --soft-2:#EFECE3;
+  --wash:#FFF4C7;
+  --side:#FBF9F2;
+  --line:#E9E5D9;
+  --dot-empty:#CFCAC0;
+  --user-bubble:#1A1A2E;
+  --user-ink:#FFFFFF;
+  --amber:#9A5B00; --amber-bg:#FFEBC2;
+  --good:#0B7A5E;  --good-bg:#DDF4EA;
+  --danger:#C22B4C;
+  --font-body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-head:"Poppins","Nunito",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#F4F1E8; --muted:#ADA9BB; --bg:#15151F; --soft:#1F1F2B; --soft-2:#282837; --wash:#2B2716;
+    --side:#191924; --line:#2E2D3F; --dot-empty:#4A4858; --teal-soft:#2F6F69; --teal-ink:#5FD6CB; --coral:#FF6B95;
+    --user-bubble:#F5C518; --user-ink:#1A1A2E;
+    --amber:#F2B552; --amber-bg:#3A2D12; --good:#5FD3AE; --good-bg:#123329; --danger:#E04A6B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#F4F1E8; --muted:#ADA9BB; --bg:#15151F; --soft:#1F1F2B; --soft-2:#282837; --wash:#2B2716;
+  --side:#191924; --line:#2E2D3F; --dot-empty:#4A4858; --teal-soft:#2F6F69; --teal-ink:#5FD6CB; --coral:#FF6B95;
+  --user-bubble:#F5C518; --user-ink:#1A1A2E;
+  --amber:#F2B552; --amber-bg:#3A2D12; --good:#5FD3AE; --good-bg:#123329; --danger:#E04A6B;
+  color-scheme:dark;
+}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:8px}
+h1,h2,h3{font-family:var(--font-head);letter-spacing:-.01em;text-wrap:balance;margin:0}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+.app{height:100%;display:grid;grid-template-columns:270px minmax(0,1fr)}
+
+/* ---------- Sidebar ---------- */
+.side{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:18px;overflow-y:auto;
+  padding-block:20px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:14px}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.brand svg{width:38px;height:38px;flex:none}
+.brand b{font-family:var(--font-head);font-size:19px}
+.brand small{display:block;font-size:12px;color:var(--muted);font-weight:700;margin-top:-3px}
+.proto{font-size:12px;font-weight:800;color:var(--amber);background:var(--amber-bg);padding:3px 10px;border-radius:999px;white-space:nowrap;align-self:flex-start}
+.side .proto{margin:-8px 0 0 54px}
+.nav-btn{width:100%;display:flex;align-items:center;gap:10px;border:0;background:none;padding:9px 10px;border-radius:10px;cursor:pointer;text-align:left;font-weight:800}
+.nav-btn:hover{background:var(--soft-2)}
+.nav-btn.on{background:var(--wash)}
+.side h4{margin:0 0 4px 10px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.classes{display:flex;flex-direction:column;gap:4px}
+.cls-head{width:100%;display:flex;align-items:center;gap:8px;border:0;background:none;padding:8px 10px;border-radius:10px;cursor:pointer;font-weight:800;text-align:left}
+.cls-head:hover{background:var(--soft-2)}
+.cls-head .caret{width:14px;height:14px;flex:none;transition:transform .15s;color:var(--muted)}
+.cls-head[aria-expanded="false"] .caret{transform:rotate(-90deg)}
+.badge{margin-left:auto;font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.badge.amber{background:var(--amber-bg);color:var(--amber)}
+.badge.good{background:var(--good-bg);color:var(--good)}
+.chat-list{list-style:none;margin:0 0 6px;padding:0 0 0 22px;display:flex;flex-direction:column;gap:1px}
+.chat-item{width:100%;border:0;background:none;text-align:left;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--muted);font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-item:hover{background:var(--soft-2);color:var(--ink)}
+.chat-item.on{background:var(--wash);color:var(--ink);font-weight:800}
+.add-chat{display:flex;align-items:center;gap:6px;border:0;background:none;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:800;color:var(--teal-ink)}
+.add-chat:hover{background:var(--soft-2)}
+.tips{font-size:13px;color:var(--muted);padding:0 10px}
+.tips p{margin:0 0 6px}
+.tips q{color:var(--ink);font-weight:700}
+.me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px 0;border-top:1px solid var(--line)}
+.me .ini{width:34px;height:34px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.me b{display:block;font-size:14px}
+.me span{font-size:12px;color:var(--muted)}
+
+/* ---------- Main ---------- */
+.main{display:flex;flex-direction:column;min-width:0;height:100%}
+.top{display:none;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-block:10px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top .proto{margin-left:auto;align-self:center}
+.menu{border:0;background:var(--soft);border-radius:10px;width:38px;height:38px;cursor:pointer;display:grid;place-items:center}
+.top b{font-family:var(--font-head)}
+.view{flex:1;min-height:0;display:flex;flex-direction:column}
+.scroller{flex:1;overflow-y:auto}
+.col{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Today landing */
+.today{padding-block:44px 24px;display:flex;flex-direction:column;gap:22px}
+.hello h1{font-size:30px;margin-top:4px}
+.hello p{margin:4px 0 0;color:var(--muted);font-size:16px}
+.tasks{display:flex;flex-direction:column;gap:10px}
+.task{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--soft);border-radius:16px;padding:14px 16px}
+.t-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center}
+.t-icon.due{background:var(--yellow);color:var(--on-yellow)}
+.t-icon.need{background:var(--amber-bg);color:var(--amber)}
+.task strong{display:block;font-size:16px}
+.task .sub{font-size:13.5px;color:var(--muted)}
+.progress{height:6px;background:var(--soft-2);border-radius:99px;margin-top:8px;overflow:hidden;max-width:260px}
+.progress i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .3s}
+.done-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;color:var(--muted);padding:0 4px}
+.done-strip .tick{color:var(--good);font-weight:900}
+.prompt{background:var(--wash);border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+.prompt .eyebrow{color:var(--teal-ink)}
+.prompt p{margin:0;font-size:16.5px;line-height:1.55}
+.link{border:0;background:none;padding:0;color:var(--teal-ink);font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.prompt .link{align-self:flex-start}
+.notice:empty{display:none}
+
+/* Chat view */
+.chat-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-block:14px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.chat-head h2{font-size:18px;overflow-wrap:anywhere}
+.chat-head .actions{margin-left:auto}
+.thread{display:flex;flex-direction:column;gap:18px;padding-block:22px 28px}
+.exchange{display:flex;flex-direction:column;gap:12px}
+.tagline{align-self:flex-end;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;font-size:12.5px;color:var(--muted);font-weight:700}
+.tag{background:var(--soft);color:var(--ink);padding:2px 10px;border-radius:99px;font-weight:800}
+.tag.c2B{background:var(--wash)}
+.tag.c1C{background:var(--amber-bg)}
+.tag.c3A{background:var(--good-bg)}
+.tagline .link{font-size:12.5px}
+.ask-map{align-self:stretch;background:var(--wash);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;color:var(--ink);font-size:14px;font-weight:600}
+.empty{color:var(--muted);text-align:center;padding:48px 0;margin:0}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{border:0;background:var(--soft);border-radius:99px;padding:5px 12px;font-size:13px;font-weight:800;cursor:pointer}
+.seg button:hover{background:var(--soft-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.nav-btn .count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:700}
+.nav-btn .badge + .count{margin-left:6px}
+.nav-btn.sub{padding-left:20px;font-weight:700}
+.msg{display:flex;gap:12px;align-items:flex-start;animation:rise .2s ease-out}
+@keyframes rise{from{transform:translateY(5px);opacity:.5}to{transform:none;opacity:1}}
+.msg .avatar{width:32px;height:32px;flex:none}
+.msg .body{min-width:0;flex:1;display:flex;flex-direction:column;gap:10px}
+.msg .body > p{margin:0}
+.msg.user{justify-content:flex-end}
+.bubble{background:var(--user-bubble);color:var(--user-ink);padding:9px 14px;border-radius:18px 18px 4px 18px;max-width:80%;font-weight:700;overflow-wrap:anywhere}
+.typing{display:inline-flex;gap:5px;padding:12px 0}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.5;animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{50%{opacity:1}}
+
+.tile{background:var(--soft);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.tile h3{font-size:17px}
+.tile-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.fine{font-size:12.5px;color:var(--muted);margin:0}
+.btn{border:0;background:var(--bg);border-radius:10px;padding:9px 15px;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;box-shadow:inset 0 0 0 1px var(--line)}
+.btn:hover{background:var(--soft-2)}
+.btn.primary{background:var(--yellow);color:var(--on-yellow);box-shadow:none}
+.btn.primary:hover{filter:brightness(.96)}
+.btn.primary:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.danger{background:var(--danger);color:#fff;box-shadow:none}
+.btn.danger:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;box-shadow:none}
+.btn.ghost:hover{background:var(--soft-2)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.done-line{display:flex;gap:10px;align-items:flex-start}
+.done-line .tick{width:26px;height:26px;border-radius:50%;background:var(--good-bg);color:var(--good);display:grid;place-items:center;flex:none;font-weight:900;font-size:14px}
+.done-line p{margin:0}
+.steps,.safe ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+
+/* Snapshot dot rows */
+.skills{display:flex;flex-direction:column;gap:16px}
+.skill{display:flex;flex-direction:column;gap:6px}
+.skill-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:14px}
+.skill-top b{font-size:15px}
+.skill-top span{color:var(--muted)}
+.dots{display:flex;flex-wrap:wrap;gap:4px}
+.dots i{width:11px;height:11px;border-radius:50%;flex:none}
+.d1{background:var(--teal)}
+.d2{background:var(--teal-soft)}
+.d3{box-shadow:inset 0 0 0 2px var(--dot-empty)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.insight{margin:0;background:var(--bg);border-radius:12px;padding:12px 14px}
+details{font-size:13.5px;color:var(--muted)}
+details summary{cursor:pointer;font-weight:800;color:var(--teal-ink)}
+details p{margin:6px 0 0}
+
+.kids{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.kids li{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;background:var(--bg);border-radius:12px;padding:12px 14px}
+.kids .k-name{font-weight:800}
+.kids .k-line{font-size:13.5px;color:var(--muted)}
+.kids .k-line em{font-style:normal;color:var(--good);font-weight:700}
+
+.drop{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:2px dashed var(--dot-empty);border-radius:14px;padding:22px 12px;cursor:pointer;background:var(--bg)}
+.drop:hover,.drop.over{border-color:var(--teal)}
+.drop span{font-size:13px;color:var(--muted)}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.checks li{display:flex;gap:8px;align-items:flex-start;font-size:14.5px}
+.checks li::before{content:"✓";font-weight:900;color:var(--good);width:18px;flex:none}
+.checks li.warn::before{content:"!";color:var(--amber);text-align:center}
+.fix{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;background:var(--bg);border-radius:12px;padding:12px}
+.fix input{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg)}
+.file-row{display:flex;gap:10px;align-items:center;font-weight:700;overflow-wrap:anywhere}
+.spin{width:18px;height:18px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--teal);animation:sp .8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:700;font-size:14px}
+select{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:var(--bg);max-width:100%}
+.will{display:flex;flex-direction:column;gap:6px;background:var(--bg);border-radius:12px;padding:12px;border-left:4px solid var(--danger)}
+.will ul{margin:0;padding-left:18px}
+.agree{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.agree input{margin-top:3px;accent-color:var(--danger)}
+.safe{box-shadow:inset 0 0 0 2px var(--coral)}
+.safe h3{color:var(--coral)}
+
+/* Composer */
+.composer{padding-block:10px 12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--bg)}
+.composer .inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:0;background:var(--soft);border-radius:999px;padding:7px 13px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex:none}
+.chip:hover{background:var(--soft-2)}
+.composer form{display:flex;gap:6px;align-items:center;background:var(--soft);border-radius:18px;padding:6px 6px 6px 8px}
+.composer form:focus-within{box-shadow:inset 0 0 0 2px var(--teal)}
+.composer input[type=text]{flex:1;min-width:0;border:0;background:transparent;padding:8px 6px;outline:none}
+.icon-btn{border:0;background:transparent;width:38px;height:38px;border-radius:12px;cursor:pointer;display:grid;place-items:center;color:var(--muted);flex:none}
+.icon-btn:hover{background:var(--soft-2);color:var(--ink)}
+.send{background:var(--yellow);color:var(--on-yellow)}
+.send:hover{background:var(--yellow);filter:brightness(.95)}
+.composer .fine{text-align:center}
+
+/* Focus mode */
+.focus{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column}
+.f-top{display:flex;align-items:center;gap:12px;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:12px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.f-meta{flex:1;min-width:0;text-align:center;display:flex;flex-direction:column}
+.f-meta b{font-variant-numeric:tabular-nums}
+.f-bar{height:5px;background:var(--soft-2)}
+.f-bar i{display:block;height:100%;background:var(--teal);transition:width .3s}
+.f-scroll{flex:1;overflow-y:auto}
+.f-body{max-width:640px;margin:0 auto;padding-block:28px 24px;display:flex;flex-direction:column;gap:18px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.f-body h2{font-size:30px}
+.f-hint{margin:-10px 0 0;color:var(--muted)}
+.f-help{background:var(--wash);border-radius:14px;padding:14px 16px}
+.f-help ol{margin:0;padding-left:20px}
+.q{display:flex;flex-direction:column;gap:10px;border:0;margin:0;padding:16px;border-radius:16px;background:var(--soft);transition:box-shadow .2s}
+.q.current{box-shadow:inset 0 0 0 2px var(--teal)}
+.q legend{float:left;width:100%;font-weight:800;font-size:16px;padding:0;margin-bottom:10px}
+.q legend span{color:var(--muted);font-weight:700;margin-right:6px}
+.scale{clear:both;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.scale label{position:relative}
+.scale input{position:absolute;opacity:0;pointer-events:none}
+.scale span{display:block;text-align:center;background:var(--bg);border-radius:12px;padding:12px 4px;font-size:14px;font-weight:800;cursor:pointer;color:var(--muted);box-shadow:inset 0 0 0 1.5px var(--line)}
+.scale span:hover{color:var(--ink)}
+.scale input:checked + span{background:var(--teal);color:#fff;box-shadow:none}
+.scale input:focus-visible + span{outline:3px solid var(--teal);outline-offset:2px}
+.f-foot{border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;padding-top:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.f-foot .grow{flex:1;min-width:0;font-size:13.5px;color:var(--good);font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn.big{padding:12px 20px;font-size:15px}
+.finish{text-align:center;align-items:center;padding-top:60px}
+.finish .big-tick{width:64px;height:64px;border-radius:50%;background:var(--good-bg);color:var(--good);display:grid;place-items:center;font-size:30px;font-weight:900}
+
+.toast{position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;max-width:calc(100% - 32px);text-align:center;z-index:80}
+.backdrop{display:none}
+
+@media (max-width: 780px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:40;transform:translateX(-105%);transition:transform .2s ease;
+    padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+  .side.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.25)}
+  .side .proto{display:none}
+  .backdrop.show{display:block;position:fixed;inset:0;background:rgba(10,10,20,.35);z-index:30}
+  .top{display:flex}
+  .today{padding-top:22px}
+  .hello h1{font-size:24px}
+  .task{grid-template-columns:40px minmax(0,1fr);grid-template-areas:"icon text" "btn btn"}
+  .task .t-icon{grid-area:icon;width:40px;height:40px}
+  .task .t-text{grid-area:text}
+  .task .btn{grid-area:btn;justify-self:stretch}
+  .scale{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .f-body h2{font-size:24px}
+}
+@media (prefers-reduced-motion: reduce){
+  .msg,.typing i,.spin{animation:none}
+  .side,.progress i,.f-bar i,.q,.cls-head .caret{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="Today and classes">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 7c2-5 7-6 9-5-1 3-4 6-9 5z" fill="var(--teal)"/><ellipse cx="20" cy="23" rx="16" ry="15" fill="var(--yellow)"/><circle cx="14" cy="21" r="2.4" fill="var(--on-yellow)"/><circle cx="26" cy="21" r="2.4" fill="var(--on-yellow)"/><circle cx="10.5" cy="26.5" r="2.6" fill="var(--coral)" opacity=".45"/><circle cx="29.5" cy="26.5" r="2.6" fill="var(--coral)" opacity=".45"/><path d="M15.5 27c1.6 2.6 7.4 2.6 9 0" stroke="var(--on-yellow)" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
+      <div><b>Ask Tilli</b><small>for teachers</small></div>
+    </div>
+    <span class="proto">Prototype · sample data</span>
+    <button type="button" class="nav-btn on" id="nav-today" data-action="home">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2.5 8 9 2.5 15.5 8v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>
+      Today</button>
+    <div>
+      <h4>My classes</h4>
+      <div class="classes" id="filters"></div>
+    </div>
+    <div class="tips">
+      <p><b>Try in this prototype</b></p>
+      <p>On Today, type <q>how did 3A do?</q> and Tilli takes you to the right class. Type <q>show me the results</q> and Tilli asks which class. Or type <q>I'm worried a child is being hurt at home</q>.</p>
+    </div>
+    <div class="me">
+      <div class="ini" aria-hidden="true">AR</div>
+      <div><b>Ms. Anjali Rao</b><span>Sample school</span></div>
+    </div>
+  </aside>
+  <div class="backdrop" id="backdrop"></div>
+
+  <main class="main">
+    <header class="top">
+      <button class="menu" id="menu" type="button" aria-label="Open classes" aria-controls="side" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <b>Ask Tilli</b>
+      <span class="proto">Prototype</span>
+    </header>
+
+    <!-- Today landing -->
+    <div class="view" id="view-today">
+      <div class="scroller" id="today-scroller">
+        <div class="col">
+          <section class="today" aria-label="Today">
+            <div id="today"></div>
+            <div class="notice" id="notice" aria-live="polite"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- A class chat -->
+    <div class="view" id="view-chat" hidden>
+      <header class="chat-head">
+        <div><span class="eyebrow">Ask Tilli chat</span><h2 id="ch-title">All classes</h2></div>
+        <div class="actions" id="ch-actions"></div>
+      </header>
+      <div class="scroller" id="chat-scroller"><div class="col"><div class="thread" id="thread" aria-live="polite"></div><p class="empty" id="empty" hidden></p></div></div>
+    </div>
+
+    <div class="composer">
+      <div class="inner">
+        <div class="chips" id="chips"></div>
+        <form id="composer">
+          <label class="icon-btn" for="composer-file" title="Upload a file" aria-label="Upload a file">
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M13.5 6.5 7.8 12.2a1.8 1.8 0 0 0 2.5 2.5l6-6a3.5 3.5 0 0 0-5-5l-6.2 6.2a5.2 5.2 0 0 0 7.4 7.4l4.5-4.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+          </label>
+          <input type="file" id="composer-file" class="vh" accept=".xlsx,.xls,.csv">
+          <input type="text" id="composer-input" autocomplete="off" aria-label="Message Ask Tilli">
+          <button class="icon-btn send" type="submit" aria-label="Send">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 15V3M4 8l5-5 5 5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </form>
+        <p class="fine" id="composer-note"></p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Focus mode for assessments -->
+<div class="focus" id="focus" role="dialog" aria-modal="true" aria-label="Grade 2B baseline" hidden>
+  <div class="f-top">
+    <button class="btn ghost" type="button" data-action="exit-focus">Done for now</button>
+    <div class="f-meta"><span class="eyebrow">Grade 2B · Baseline</span><b id="f-count"></b></div>
+    <button class="btn ghost" type="button" data-action="toggle-help" aria-expanded="false">Help</button>
+  </div>
+  <div class="f-bar"><i id="f-bar"></i></div>
+  <div class="f-scroll" id="f-scroll"><div class="f-body" id="f-body"></div></div>
+  <div class="f-foot" id="f-foot">
+    <button class="btn ghost" type="button" data-action="skip-child">Absent? Skip</button>
+    <span class="grow" id="f-saved" aria-live="polite"></span>
+    <button class="btn primary big" type="button" data-action="next-child" id="f-next" disabled>Save and next</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wait = ms => new Promise(r => setTimeout(r, reduce ? 0 : ms));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let uid = 0;
+
+  const students = ["Aarav S.","Diya K.","Kabir M.","Meera R.","Ishaan P.","Zara A.","Rohan T.","Anaya V.","Vihaan G.","Sara N.","Arjun D.","Kiara B.","Dev L.","Myra J.","Reyansh C.","Tara H.","Aditya F.","Nisha W.","Yusuf Q.","Leela O.","Krish E.","Fatima Z.","Omar I.","Riya U.","Neel M.","Aisha R.","Karan B.","Pooja S."];
+  const TOTAL = students.length;
+  const state = {
+    done: new Set([...Array(12).keys()]),
+    queue: [...Array(TOTAL).keys()].slice(12),
+    classList: false, promptIdx: 0, sessionSaved: 0, helpOpen: false, lastFocus: null,
+    view: 'today', filter: '2B', pending: null
+  };
+  const left = () => TOTAL - state.done.size;
+  const prompts = [
+    "Energy cup check-in: ask children to show with one hand how full their energy cup is right now (empty, half or full). Then ask: what could fill it up a little?",
+    "Kindness detective: during the day, children watch for one kind thing a classmate does. At the end of the day, three children share what they spotted.",
+    "Feelings weather: ask each child which weather matches their mood today (sunny, cloudy, rainy or stormy). Share yours first."
+  ];
+  const items = [
+    "Waits for their turn in group activities",
+    "Names their feelings when upset (for example, “I feel angry”)",
+    "Calms down within a few minutes after being upset",
+    "Offers help to a classmate without being asked"
+  ];
+  const scale = ["Rarely","Sometimes","Often","Almost always"];
+  const AVATAR = '<svg class="avatar" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 7c2-5 7-6 9-5-1 3-4 6-9 5z" fill="var(--teal)"/><ellipse cx="20" cy="23" rx="16" ry="15" fill="var(--yellow)"/><circle cx="14" cy="21" r="2.4" fill="var(--on-yellow)"/><circle cx="26" cy="21" r="2.4" fill="var(--on-yellow)"/><circle cx="10.5" cy="26.5" r="2.6" fill="var(--coral)" opacity=".45"/><circle cx="29.5" cy="26.5" r="2.6" fill="var(--coral)" opacity=".45"/><path d="M15.5 27c1.6 2.6 7.4 2.6 9 0" stroke="var(--on-yellow)" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>';
+
+  const CLASSES = ['2B','1C','3A'];
+  const LABEL = { '2B':'Grade 2B', '1C':'Grade 1C', '3A':'Grade 3A', GEN:'Other questions' };
+  const thread = $('#thread');
+
+  /* ---------- Sorting messages into classes ---------- */
+  const isSafety = t => /\bhurt|\bhit(s|ting)?\b|abuse|unsafe|\bbeat(s|ing|en)?\b|bruise|scared of/.test(t);
+  function mentioned(t){
+    if (/\b(grade\s*)?2\s?b\b/.test(t)) return '2B';
+    if (/\b(grade\s*)?1\s?c\b/.test(t)) return '1C';
+    if (/\b(grade\s*)?3\s?a\b/.test(t)) return '3A';
+    return null;
+  }
+  function byTopic(t){
+    if (/upload|class list|roster/.test(t) && !state.classList) return '1C';   // only class still missing a list
+    if (/continue|assess|baseline/.test(t)) return '2B';                       // only baseline in progress
+    if (/endline|support|practice/.test(t)) return '3A';                       // only class with results
+    if (/prompt|^(hi|hello)\b|good morning|thank/.test(t)) return 'GEN';
+    return null;
+  }
+  /* ---------- Thread: one store of messages, each quietly kept under a class ---------- */
+  function scrollDown(){ if (state.view === 'chat') requestAnimationFrame(() => { const s = $('#chat-scroller'); s.scrollTop = s.scrollHeight; }); }
+  function newExchange(text, c){
+    const ex = document.createElement('div'); ex.className = 'exchange'; ex.dataset.cls = c;
+    if (text != null) ex.innerHTML = `<div class="msg user"><div class="bubble">${esc(text)}</div></div>`;
+    thread.appendChild(ex); applyFilter(); renderSide(); return ex;
+  }
+  function botIn(ex, html){
+    const lead = ex._lead || ''; ex._lead = '';
+    const row = document.createElement('div'); row.className = 'msg bot';
+    row.innerHTML = AVATAR + '<div class="body"><div class="typing" aria-label="Ask Tilli is typing"><i></i><i></i><i></i></div></div>';
+    ex.appendChild(row); scrollDown();
+    return wait(350).then(() => { row.querySelector('.body').innerHTML = lead + html; scrollDown(); return row; });
+  }
+  function botNow(ex, html){
+    const row = document.createElement('div'); row.className = 'msg bot';
+    row.innerHTML = AVATAR + '<div class="body">' + html + '</div>'; ex.appendChild(row); return row;
+  }
+  function botOnly(c, html){ return botIn(newExchange(null, c), html); }
+  function count(c){ return [...thread.children].filter(ex => ex.dataset.cls === c && !ex.dataset.safe).length; }
+
+  function applyFilter(){
+    let visible = 0;
+    [...thread.children].forEach(ex => { const show = ex.dataset.cls === state.filter; ex.hidden = !show; if (show) visible++; });
+    const empty = $('#empty');
+    empty.hidden = visible > 0;
+    empty.textContent = `No messages about ${LABEL[state.filter]} yet. Ask anything below.`;
+  }
+
+  /* ---------- Sending ---------- */
+  function send(text){                       // typed inside a class chat
+    const t = text.toLowerCase(), was = state.filter;
+    if (isSafety(t)){ const ex = newExchange(text, was); ex.dataset.safe = '1'; renderSide(); scrollDown(); botIn(ex, safeHTML()); return; }
+    const m = mentioned(t), c = m || was;
+    if (c !== was) showChat(c);
+    const ex = newExchange(text, c); scrollDown();
+    if (c !== was) ex._lead = `<p>That one's about ${LABEL[c]}, so I've brought us over to your ${LABEL[c]} chat.</p>`;
+    route(ex, c, text);
+  }
+  function fromToday(text){                  // typed on Today: work out the class, or ask
+    const t = text.toLowerCase();
+    if (isSafety(t)){ state.pending = null; $('#notice').innerHTML = safeHTML(); return; }
+    const m = mentioned(t), c = m || byTopic(t);
+    if (!c){
+      state.pending = text;
+      $('#notice').innerHTML = `<div class="tile"><p style="margin:0"><b>Which class is this about?</b><br><span class="fine" style="font-size:14px">“${esc(text)}”</span></p>
+        <div class="actions">${CLASSES.map(k => `<button class="btn" type="button" data-map="${k}">${LABEL[k]}</button>`).join('')}
+        <button class="btn ghost" type="button" data-map="GEN">Not about one class</button></div></div>`;
+      return;
+    }
+    fileFromToday(c, text, m ? 'named' : 'guessed');
+  }
+  function fileFromToday(c, text, how){
+    $('#notice').innerHTML = ''; state.pending = null;
+    showChat(c);
+    const ex = newExchange(text, c);
+    if (c !== 'GEN') ex._lead = how === 'named' ? `<p>Got it, I've popped this into your ${LABEL[c]} chat.</p>`
+                              : how === 'guessed' ? `<p>This sounds like ${LABEL[c]}, so I've popped it into that chat.</p>`
+                              : `<p>Thanks! I've popped this into your ${LABEL[c]} chat.</p>`;
+    route(ex, c, text);
+  }
+
+  /* ---------- Replies ---------- */
+  function route(ex, c, text){
+    const t = text.toLowerCase(), name = LABEL[c];
+    const btns = list => '<div class="actions">' + list.map(x => `<button class="btn" type="button" data-say="${esc(x)}">${esc(x)}</button>`).join('') + '</div>';
+    if (/activit/.test(t)){
+      const m = text.match(/for ([A-Z][a-z]+)/); const who = m ? esc(m[1]) : 'a child who finds it hard to calm down';
+      return botIn(ex, `<p>Try a <b>calm corner card</b> with ${who}: a small card with three pictures (breathe, squeeze a ball, count to five). When they're upset, point to the card and do the first step together. Practise it once a day while they're calm, so it feels familiar.</p>`);
+    }
+    if (/how do i|how does|how to/.test(t)) return botIn(ex, howHTML());
+    if (/mean|often/.test(t)) return botIn(ex, `<p>“Often” means you see it most days, more than half the time. “Sometimes” is a few times a week. If you're unsure between two answers, pick the lower one.</p>`);
+    if (c === 'GEN'){
+      if (/prompt/.test(t)){ state.promptIdx = (state.promptIdx + 1) % prompts.length; return botIn(ex, `<p>${prompts[state.promptIdx]}</p>`); }
+      return botIn(ex, `<p>In the real product, Ask Tilli would answer this from across your classes. In this prototype, try one of the suggestions below.</p>`);
+    }
+    if (/delete|remove/.test(t)) return botIn(ex, c === '1C' ? `<p>Grade 1C has no assessment data yet, so there's nothing to delete.</p>` : deleteHTML(c));
+    if (/upload|class list|roster|file/.test(t)) return botIn(ex, uploadHTML(c));
+    if (/when|open/.test(t) && c === '1C') return botIn(ex, `<p>The Grade 1C baseline opens on <b>Monday, 23 November</b>${state.classList ? '.' : ', once the class list is on the dashboard.'}</p>${state.classList ? '' : btns(["Upload the 1C class list"])}`);
+    if (/support|practice|struggl/.test(t)) return botIn(ex, c === '3A' ? supportHTML() : `<p>I'll suggest children for extra practice once ${name}'s results are in.</p>`);
+    if (/result|how is|how did|doing|progress|snapshot/.test(t)){
+      if (c === '3A') return botIn(ex, snapshot3A());
+      if (c === '1C') return botIn(ex, `<p>Grade 1C hasn't started its baseline yet, so there are no results.</p>`);
+      return botIn(ex, left() ? `<p>Grade 2B is still in progress: ${state.done.size} of ${TOTAL} children are done. I'll show class results once everyone is assessed, so a few children don't stand in for the whole class.</p>${btns(["Continue the 2B assessment"])}`
+                              : `<p>Grade 2B is complete. In the real product, the class results would appear here.</p>`);
+    }
+    if (/continue|assess|baseline|help with/.test(t)){
+      if (c === '2B'){
+        if (/help/.test(t)) return botIn(ex, howHTML());
+        return botIn(ex, left() ? '<p>Opening the Grade 2B baseline…</p>' : '<p>Grade 2B is already complete.</p>').then(() => { if (left()) setTimeout(() => openFocus(true), reduce ? 0 : 300); });
+      }
+      return botIn(ex, c === '1C' ? `<p>The Grade 1C baseline opens on Monday.</p>` : `<p>Grade 3A's endline is complete for all 31 children.</p>${btns(["Show the 3A results"])}`);
+    }
+    if (/prompt/.test(t)) return botIn(ex, `<p>${prompts[state.promptIdx]}</p>`);
+    return botIn(ex, `<p>In the real product, Ask Tilli would answer this from ${name}'s data on the dashboard. In this prototype, try one of the suggestions below.</p>`);
+  }
+
+  function howHTML(){
+    return `<p>The teacher report takes about 2 minutes per child:</p>
+    <ol class="steps">
+      <li>Tap <b>Continue</b>. Ask Tilli opens one child at a time.</li>
+      <li>Answer 4 statements about what you usually see over the last 2 weeks.</li>
+      <li>Tap <b>Save and next</b>. Absent child? Skip them and they move to the end.</li>
+      <li>Tap <b>Done for now</b> whenever you need to stop. Everything saved stays saved.</li>
+    </ol><div class="actions"><button class="btn" type="button" data-say="Continue the 2B assessment">Continue the 2B assessment</button></div>`;
+  }
+  function uploadHTML(c){
+    const id = ++uid;
+    return `<p>Let's add the ${LABEL[c]} class list. The Tilli template works, or any Excel or CSV file with each child's name and date of birth.</p>
+    <div class="tile" data-cls="${c}">
+      <label class="drop" for="up${id}">
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 18V5M8 10l6-6 6 6" stroke="var(--teal)" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4" stroke="var(--teal)" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+        <strong>Drop a file here or choose one</strong><span>.xlsx or .csv, up to 5 MB</span>
+      </label>
+      <input type="file" id="up${id}" class="vh" accept=".xlsx,.xls,.csv" data-upload>
+      <div class="actions"><button class="btn ghost" type="button" data-action="sample-upload">Use a sample file</button></div>
+      <p class="fine">The file goes straight to the Tilli dashboard. Ask Tilli only sees a summary of what was found.</p>
+    </div>`;
+  }
+  async function runUpload(card, fileName){
+    const c = card.dataset.cls || '1C';
+    card.innerHTML = `<div class="file-row"><span class="spin" aria-hidden="true"></span>Checking ${esc(fileName)}…</div>`;
+    scrollDown(); await wait(1200);
+    const id = ++uid;
+    card.innerHTML = `<div class="tile-head"><div><span class="eyebrow">${LABEL[c]} · Class list</span><h3>${esc(fileName)}</h3></div></div>
+      <ul class="checks"><li>28 children found</li><li>Columns matched: name, date of birth, gender</li>
+        <li class="warn">2 children have no date of birth: Leela O. (row 7) and Yusuf Q. (row 19)</li></ul>
+      <div class="fix" hidden data-fix>
+        <label for="dob${id}a">Leela O.</label><input type="date" id="dob${id}a">
+        <label for="dob${id}b">Yusuf Q.</label><input type="date" id="dob${id}b">
+      </div>
+      <div class="actions"><button class="btn primary" type="button" data-action="save-upload">Save to dashboard</button><button class="btn ghost" type="button" data-action="fix-rows">Add the 2 missing dates</button></div>`;
+    scrollDown();
+  }
+  function snapshot3A(){
+    const rows = [["Understanding others",21,8,2],["Managing big feelings",17,10,4],["Relationship skills",19,9,3],["Naming feelings",12,13,6]];
+    const dots = (a,b,c) => '<i class="d1"></i>'.repeat(a) + '<i class="d2"></i>'.repeat(b) + '<i class="d3"></i>'.repeat(c);
+    return `<p>Here's how Grade 3A finished the year. Each dot is one child.</p>
+    <div class="tile">
+      <div class="tile-head"><div><span class="eyebrow">Grade 3A · Endline · All 31 children</span><h3>Where your class is now</h3></div></div>
+      <div class="legend"><span><i class="d1"></i>Confident</span><span><i class="d2"></i>Growing</span><span><i class="d3"></i>Just starting</span></div>
+      <div class="skills">${rows.map(([label,a,b,c]) => `<div class="skill">
+          <div class="skill-top"><b>${label}</b><span>${a} confident · ${b} growing · ${c} just starting</span></div>
+          <div class="dots" role="img" aria-label="${label}: ${a} confident, ${b} growing, ${c} just starting">${dots(a,b,c)}</div></div>`).join('')}</div>
+      <p class="insight"><b>Naming feelings</b> has the most children still growing (19 of 31). Prompts like today's energy cup check-in give them words for how they feel.</p>
+      <details><summary>Where do these come from?</summary>
+        <p>From your endline teacher reports, completed on 14 November. Each child's answers for a skill are placed in one of three groups using Tilli's scoring guide. Groups describe where a child is right now, not a fixed label.</p></details>
+      <div class="actions"><button class="btn" type="button" data-say="Which 3A children need extra practice?">Which children could use extra practice?</button><button class="btn ghost" type="button" data-action="open-dash">Open full dashboard ↗</button></div>
+      <p class="fine">Sample data for the prototype.</p>
+    </div>`;
+  }
+  function supportHTML(){
+    const kids = [["Kabir M.","helping classmates","calming down after being upset"],["Meera R.","waiting for a turn","naming feelings"],["Rohan T.","naming feelings","waiting for a turn"]];
+    return `<p>These Grade 3A children could use a little extra practice. Every child also has strengths, so those come first. These are ideas for support, not a diagnosis.</p>
+    <div class="tile">
+      <ul class="kids">${kids.map(([n,s,g],i) => `<li><div><div class="k-name" data-name="${esc(n)}">Child ${i+1}</div>
+          <div class="k-line"><em>Strong at</em> ${s} · <b>Practising</b> ${g}</div></div>
+          <button class="btn ghost" type="button" data-say="Give me an activity for ${esc(n.split(' ')[0])} in 3A">Activity idea</button></li>`).join('')}</ul>
+      <div class="actions"><button class="btn" type="button" data-action="show-names">Show names</button></div>
+      <p class="fine">Names are hidden so you can open this anywhere, like the staffroom.</p>
+    </div>`;
+  }
+  function deleteHTML(c){
+    const id = ++uid;
+    const list = c === '2B' ? [...state.done].sort((a,b)=>a-b) : [...Array(TOTAL).keys()];
+    const opts = list.map(i => `<option value="${i}">${esc(students[i])}</option>`).join('');
+    const what = c === '2B' ? 'baseline' : 'endline';
+    return `<p>You can delete one child's assessment data. Pick the child and I'll show exactly what will be removed.</p>
+    <div class="tile" data-cls="${c}" data-what="${what}">
+      <div class="field"><label for="del${id}">Child in ${LABEL[c]}</label><select id="del${id}" data-del-select><option value="">Choose a child</option>${opts}</select></div>
+      <div class="will" hidden data-will><b>This will delete</b>
+        <ul><li data-will-name></li><li>Their part of ${LABEL[c]}'s class results</li></ul>
+        <span style="font-size:13px;color:var(--muted)">Their name stays on the class list. You can remove it from the class page.</span></div>
+      <label class="agree" hidden data-agree><input type="checkbox" id="agree${id}" data-agree-box> I understand. The data goes to Recently deleted and is removed for good after 30 days.</label>
+      <div class="actions"><button class="btn danger" type="button" data-action="do-delete" disabled>Delete data</button><button class="btn ghost" type="button" data-action="cancel-delete">Cancel</button></div>
+    </div>`;
+  }
+  function safeHTML(){
+    return `<div class="tile safe">
+      <h3>This may be a child safety concern</h3>
+      <p style="margin:0">Thank you for telling me. Please follow your school's child protection process today. Ask Tilli can't act on this for you.</p>
+      <ol><li>Write down what you saw or heard, using the child's own words.</li><li>Tell your school's safeguarding lead today.</li><li>Don't question the child further or promise to keep it a secret.</li></ol>
+      <div class="actions"><button class="btn" type="button" data-action="safe-contact">Show my school's safeguarding contact</button></div>
+      <p class="fine">This message is not sorted under any class, and it will not be kept in the chat or saved to the dashboard.</p>
+    </div>`;
+  }
+
+  /* ---------- Views ---------- */
+  function badge(id){
+    if (id === '2B') return left() ? `<span class="badge amber">${left()} left</span>` : '<span class="badge good">Done</span>';
+    if (id === '1C') return state.classList ? '<span class="badge good">Ready</span>' : '<span class="badge amber">Needs list</span>';
+    if (id === '3A') return '<span class="badge good">Done</span>';
+    return '';
+  }
+  function renderSide(){
+    const on = f => state.view === 'chat' && state.filter === f ? ' on' : '';
+    $('#nav-today').classList.toggle('on', state.view === 'today');
+    $('#filters').innerHTML = ['2B','1C','3A'].map(c => `<button type="button" class="nav-btn${on(c)}" data-filter="${c}">${LABEL[c]} ${badge(c)}</button>`).join('') +
+      (count('GEN') ? `<button type="button" class="nav-btn${on('GEN')}" data-filter="GEN" style="color:var(--muted)">Other questions</button>` : '');
+  }
+  const chipSets = {
+    today: ["How did 3A do?","Upload the 1C class list","Show me the results","Help with the 2B baseline"],
+    '2B':  ["Continue assessing","How is it doing?","How do I do the assessment?","Delete a child's data"],
+    '1C':  ["Upload the class list","When does the baseline open?"],
+    '3A':  ["Show the results","Which children need support?","Give me an activity idea"],
+    GEN:   ["Give me another prompt","How do I do the assessment?"]
+  };
+  function setComposer(){
+    const key = state.view === 'today' ? 'today' : state.filter;
+    $('#chips').innerHTML = chipSets[key].map(t => `<button class="chip" type="button" data-say="${esc(t)}">${esc(t)}</button>`).join('');
+    const inp = $('#composer-input');
+    if (state.view === 'today' || state.filter === 'GEN') inp.placeholder = 'Ask Tilli anything about your classes…';
+    else inp.placeholder = `Ask about ${LABEL[state.filter]}…`;
+    $('#composer-note').textContent = state.view === 'today'
+      ? 'Your class data stays on the Tilli dashboard.'
+      : `Your ${LABEL[state.filter]} messages are kept here. You can clear them any time.`;
+  }
+  function goToday(){
+    state.view = 'today'; closeSide();
+    $('#view-chat').hidden = true; $('#view-today').hidden = false;
+    renderToday(); renderSide(); setComposer();
+  }
+  function showChat(filter){
+    if (filter) state.filter = filter;
+    state.view = 'chat'; closeSide();
+    $('#view-today').hidden = true; $('#view-chat').hidden = false;
+    $('#ch-title').textContent = LABEL[state.filter];
+    $('#ch-actions').innerHTML = `<button class="btn ghost" type="button" data-action="ask-clear">Clear chat</button>`;
+    applyFilter(); renderSide(); setComposer(); scrollDown();
+  }
+
+  /* ---------- Today ---------- */
+  function renderToday(){
+    const l = left(), pct = Math.round(state.done.size / TOTAL * 100);
+    const due = (l ? 1 : 0) + (state.classList ? 0 : 1);
+    const tasks = [];
+    if (l) tasks.push(`<div class="task">
+        <div class="t-icon due" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 22 22"><rect x="4" y="3" width="14" height="17" rx="2.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 9l2 2 4-4M8 15h6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="t-text"><strong>Finish the Grade 2B baseline</strong><span class="sub">${l} children left · about ${l*2} min · due Friday</span><div class="progress" aria-hidden="true"><i style="width:${pct}%"></i></div></div>
+        <button class="btn primary" type="button" data-action="open-focus">Continue</button></div>`);
+    if (!state.classList) tasks.push(`<div class="task">
+        <div class="t-icon need" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 22 22"><path d="M11 15V4M6.5 8.5 11 4l4.5 4.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v2.5A1.5 1.5 0 0 0 5.5 19h11a1.5 1.5 0 0 0 1.5-1.5V15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+        <div class="t-text"><strong>Add the Grade 1C class list</strong><span class="sub">Needed before Monday, when the baseline opens</span></div>
+        <button class="btn" type="button" data-say="Upload the 1C class list">Upload</button></div>`);
+    const doneBits = ['Grade 3A endline complete'];
+    if (!l) doneBits.push('Grade 2B baseline complete');
+    if (state.classList) doneBits.push('Grade 1C class list added');
+    $('#today').innerHTML = `<div style="display:flex;flex-direction:column;gap:22px">
+      <div class="hello"><span class="eyebrow">Wednesday, 18 November</span><h1>Good morning, Anjali</h1>
+        <p>${due === 0 ? "You're all caught up this week." : due === 1 ? 'One thing needs you this week.' : 'Two things need you this week.'}</p></div>
+      ${tasks.length ? `<div class="tasks">${tasks.join('')}</div>` : ''}
+      <div class="done-strip"><span class="tick">✓</span>${doneBits.join(' · ')} · <button class="link" type="button" data-filter="3A">See 3A results</button></div>
+      <div class="prompt"><span class="eyebrow">Think prompt for today</span><p>${prompts[state.promptIdx]}</p>
+        <button class="link" type="button" data-action="next-prompt">Show me another one</button></div></div>`;
+  }
+
+  /* ---------- Focus mode ---------- */
+  const focus = $('#focus');
+  let focusFromChat = false;
+  function openFocus(fromChat){
+    focusFromChat = !!fromChat; state.lastFocus = document.activeElement; state.sessionSaved = 0;
+    focus.hidden = false; $('#f-saved').textContent = ''; renderFocus(); closeSide();
+    setTimeout(() => focus.querySelector('[data-action="exit-focus"]').focus(), 0);
+  }
+  function renderFocus(){
+    const body = $('#f-body'), foot = $('#f-foot');
+    $('#f-bar').style.width = Math.round(state.done.size / TOTAL * 100) + '%';
+    if (!state.queue.length){
+      $('#f-count').textContent = `All ${TOTAL} children done`;
+      body.innerHTML = `<div class="finish" style="display:flex;flex-direction:column;gap:14px"><div class="big-tick">✓</div><h2>Grade 2B is complete</h2><p class="f-hint" style="margin:0">All ${TOTAL} children are saved on the dashboard.</p>
+        <button class="btn primary big" type="button" data-action="exit-focus">Back to Ask Tilli</button></div>`;
+      foot.hidden = true; return;
+    }
+    foot.hidden = false;
+    const idx = state.queue[0], id = ++uid;
+    $('#f-count').textContent = `${state.done.size} of ${TOTAL} done`;
+    body.innerHTML = `<div class="f-help" id="f-help" ${state.helpOpen ? '' : 'hidden'}><ol>
+        <li>Think about what you usually see from this child over the last 2 weeks.</li>
+        <li>Pick one answer for each statement. There are no right or wrong answers.</li>
+        <li>“Often” means most days. “Sometimes” means a few times a week. Unsure between two? Pick the lower one.</li>
+        <li>Each child takes about 2 minutes. You can stop at any time; saved children stay saved.</li></ol></div>
+      <h2>${esc(students[idx])}</h2><p class="f-hint">Rate what you usually see in class, not just today.</p>` +
+      items.map((it, i) => `<fieldset class="q${i === 0 ? ' current' : ''}"><legend><span>${i+1}.</span>${esc(it)}</legend><div class="scale">${
+        scale.map(s => `<label><input type="radio" name="f${id}_${i}" id="f${id}_${i}_${s.replace(/\s/g,'')}" value="${s}"><span>${s}</span></label>`).join('')
+      }</div></fieldset>`).join('') + `<p class="fine">Sample statements for the prototype, not the real Tilli measure.</p>`;
+    $('#f-next').disabled = true; $('#f-scroll').scrollTop = 0;
+  }
+  function closeFocus(){
+    focus.hidden = true;
+    const n = state.sessionSaved, l = left();
+    if (state.view === 'today') renderToday();
+    if (n){
+      const msg = l ? `<p>Nice work. You saved ${n} ${n === 1 ? 'child' : 'children'} in the Grade 2B baseline. ${l} left for Friday.</p>` : `<p>Grade 2B is complete. Every child is saved on the dashboard.</p>`;
+      if (state.view === 'chat' && state.filter === '2B') botOnly('2B', msg);
+      else { botNow(newExchange(null, '2B'), msg); toast(l ? `Saved ${n} ${n === 1 ? 'child' : 'children'}. ${l} left for Friday.` : 'Grade 2B is complete.'); }
+    }
+    renderSide();
+    if (state.lastFocus && document.contains(state.lastFocus)) state.lastFocus.focus();
+  }
+
+  function toast(msg){ const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { el.hidden = true; }, 2800); }
+
+  /* ---------- Events ---------- */
+  document.addEventListener('click', e => {
+    const sayBtn = e.target.closest('[data-say]');
+    if (sayBtn){ const t = sayBtn.dataset.say; state.view === 'chat' ? send(t) : fromToday(t); return; }
+    const f = e.target.closest('[data-filter]'); if (f){ showChat(f.dataset.filter); return; }
+    const map = e.target.closest('[data-map]');
+    if (map && state.pending){ fileFromToday(map.dataset.map, state.pending, 'asked'); return; }
+    const a = e.target.closest('[data-action]'); if (!a) return;
+    const card = a.closest('.tile');
+    switch (a.dataset.action){
+      case 'home': goToday(); break;
+      case 'open-focus': openFocus(state.view === 'chat'); break;
+      case 'exit-focus': closeFocus(); break;
+      case 'next-prompt': state.promptIdx = (state.promptIdx + 1) % prompts.length; renderToday(); break;
+      case 'ask-clear':
+        $('#ch-actions').innerHTML = `<span style="font-size:14px;font-weight:700">Clear the ${LABEL[state.filter]} chat?</span><button class="btn danger" type="button" data-action="clear">Clear</button><button class="btn ghost" type="button" data-action="keep">Keep</button>`; break;
+      case 'keep': showChat(); break;
+      case 'clear':
+        [...thread.children].forEach(ex => { if (ex.dataset.cls === state.filter) ex.remove(); });
+        toast('Cleared. Class data on the dashboard is unchanged.'); showChat(); break;
+      case 'toggle-help': { state.helpOpen = !state.helpOpen; a.setAttribute('aria-expanded', state.helpOpen); const h = $('#f-help'); if (h) h.hidden = !state.helpOpen; break; }
+      case 'next-child': { const idx = state.queue.shift(); state.done.add(idx); state.sessionSaved++; $('#f-saved').textContent = `✓ ${students[idx]} saved`; renderFocus(); break; }
+      case 'skip-child':
+        if (state.queue.length > 1){ const idx = state.queue.shift(); state.queue.push(idx); toast(`${students[idx]} moved to the end of the list`); renderFocus(); }
+        else toast('This is the last child left.');
+        break;
+      case 'sample-upload': runUpload(card, 'Grade1C_class_list.xlsx'); break;
+      case 'fix-rows': { const fx = card.querySelector('[data-fix]'); fx.hidden = false; a.remove(); fx.querySelector('input').focus(); break; }
+      case 'save-upload': {
+        const dates = [...card.querySelectorAll('[data-fix] input')];
+        const filled = dates.length > 0 && dates.every(d => d.value);
+        const c = card.dataset.cls || '1C';
+        if (c === '1C') state.classList = true;
+        renderSide();
+        card.innerHTML = `<div class="done-line"><span class="tick">✓</span><div><p><b>Saved.</b> ${LABEL[c]} now has 28 children on the dashboard.</p><p class="fine">${filled ? 'All dates of birth are complete.' : '2 dates of birth are still missing. You can add them later from the class page.'}${c === '1C' ? ' The baseline opens on Monday.' : ''}</p></div></div>`;
+        break;
+      }
+      case 'show-names': {
+        const showing = a.dataset.on === '1';
+        card.querySelectorAll('[data-name]').forEach((el, i) => { el.textContent = showing ? `Child ${i+1}` : el.dataset.name; });
+        a.dataset.on = showing ? '0' : '1'; a.textContent = showing ? 'Show names' : 'Hide names'; break;
+      }
+      case 'do-delete': {
+        const idx = +card.querySelector('[data-del-select]').value, c = card.dataset.cls;
+        if (c === '2B'){ state.done.delete(idx); state.queue.push(idx); renderSide(); }
+        card.dataset.idx = idx;
+        card.innerHTML = `<div class="done-line"><span class="tick">✓</span><div><p><b>Deleted.</b> ${esc(students[idx])}'s ${LABEL[c]} ${card.dataset.what} answers are in Recently deleted on the dashboard. They'll be removed for good on 18 December 2026.</p></div></div>
+          <div class="actions"><button class="btn" type="button" data-action="undo-delete">Undo</button></div>`;
+        break;
+      }
+      case 'undo-delete': {
+        const idx = +card.dataset.idx, c = card.dataset.cls;
+        if (c === '2B'){ state.queue = state.queue.filter(q => q !== idx); state.done.add(idx); renderSide(); }
+        card.innerHTML = `<div class="done-line"><span class="tick">✓</span><div><p><b>Restored.</b> ${esc(students[idx])}'s answers are back on the dashboard. Nothing was lost.</p></div></div>`;
+        break;
+      }
+      case 'cancel-delete': card.innerHTML = `<p style="margin:0;color:var(--muted)">Cancelled. Nothing was deleted.</p>`; break;
+      case 'open-dash': toast('In the real product, this opens the full Tilli dashboard.'); break;
+      case 'safe-contact': toast('In the real product, this shows the safeguarding lead your school has set.'); break;
+    }
+  });
+
+  document.addEventListener('change', e => {
+    const el = e.target;
+    if (el.closest('#focus') && el.type === 'radio'){
+      const qs = [...focus.querySelectorAll('.q')];
+      qs.forEach(q => q.classList.remove('current'));
+      const next = qs.find(q => !q.querySelector('input:checked'));
+      if (next){ next.classList.add('current'); next.scrollIntoView({block:'nearest', behavior: reduce ? 'auto' : 'smooth'}); }
+      $('#f-next').disabled = !!next; return;
+    }
+    if (el.matches('[data-upload]')){ const f = el.files[0]; if (f) runUpload(el.closest('.tile'), f.name); }
+    if (el.id === 'composer-file'){
+      const f = el.files[0]; if (!f) return; el.value = '';
+      const fromToday = state.view === 'today' || state.filter === 'GEN';
+      if (fromToday) showChat('1C');
+      const c = state.filter;
+      const ex = newExchange('📎 ' + f.name, c);
+      botIn(ex, `<p>${fromToday ? `Looks like a class list, so I've popped it into your ${LABEL[c]} chat. ` : ''}Checking it now…</p><div class="tile" data-cls="${c}"></div>`).then(row => runUpload(row.querySelector('.tile'), f.name));
+    }
+    if (el.matches('[data-del-select]')){
+      const card = el.closest('.tile'), v = el.value;
+      card.querySelector('[data-will]').hidden = !v;
+      card.querySelector('[data-agree]').hidden = !v;
+      card.querySelector('[data-will-name]').textContent = v ? `${students[+v]}'s ${card.dataset.what} answers (4 statements)` : '';
+      card.querySelector('[data-agree-box]').checked = false;
+      card.querySelector('[data-action="do-delete"]').disabled = true;
+    }
+    if (el.matches('[data-agree-box]')) el.closest('.tile').querySelector('[data-action="do-delete"]').disabled = !el.checked;
+  });
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !focus.hidden) closeFocus(); });
+  ['dragover','dragleave','drop'].forEach(ev => document.addEventListener(ev, e => {
+    const d = e.target.closest && e.target.closest('.drop'); if (!d) return;
+    e.preventDefault(); d.classList.toggle('over', ev === 'dragover');
+    if (ev === 'drop' && e.dataTransfer.files[0]) runUpload(d.closest('.tile'), e.dataTransfer.files[0].name);
+  }));
+
+  $('#composer').addEventListener('submit', e => {
+    e.preventDefault();
+    const inp = $('#composer-input'), v = inp.value.trim(); if (!v) return;
+    inp.value = ''; state.view === 'chat' ? send(v) : fromToday(v);
+  });
+
+  const side = $('#side'), backdrop = $('#backdrop'), menu = $('#menu');
+  function closeSide(){ side.classList.remove('open'); backdrop.classList.remove('show'); menu.setAttribute('aria-expanded','false'); }
+  menu.addEventListener('click', () => { side.classList.add('open'); backdrop.classList.add('show'); menu.setAttribute('aria-expanded','true'); });
+  backdrop.addEventListener('click', closeSide);
+
+  /* ---------- Sample chat history ---------- */
+  (function seed(){
+    const add = (c, q, html) => botNow(newExchange(q, c), html);
+    add('2B', 'Any activity ideas for turn-taking?', `<p>Try a <b>talking stone</b>: only the child holding the stone speaks, then passes it on. Start with groups of four for 5 minutes, and say out loud when someone waits well.</p>`);
+    add('1C', 'When does the baseline open?', `<p>The Grade 1C baseline opens on <b>Monday, 23 November</b>, once the class list is on the dashboard.</p>`);
+    add('3A', 'How did the class do on the endline?', snapshot3A());
+  })();
+
+  goToday();
+})();
+</script>
+
+</body>
+</html>
